@@ -15,12 +15,9 @@ Steam 上有许多游戏和 DLC(游戏拓展内容)。每个游戏和 DLC 都有
 * 输出一个整数，表示在不超过预算 `M` 元的前提下，能获取的最大耐玩值。
  */
 #include <algorithm>
-#include <chrono>
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-
-#include "print_utils.hpp"
 
 using namespace std;
 
@@ -109,33 +106,22 @@ int steamGames_grouped_dp(const vector<int>& prices, const vector<int>& values, 
     return dp[M];
 }
 
+#include "test_utils.hpp"
+
 int main() {
     cout << "Steam Games Problem" << endl;
-
-    // 测试用例：
-    int M = 200;
-    vector<int> prices = {100, 23, 59, 69, 30, 40};
-    vector<int> values = {4, 3, 5, 2, 6, 7};
-    vector<int> indices = {-1, 0, 0, -1, 3, -1};
-    // result: 16
-
-    cout << "M: " << M << endl;
-    cout << "Prices: " << prices << endl;
-    cout << "Values: " << values << endl;
-    cout << "Indices: " << indices << endl;
-    cout << "------" << endl;
-
-    auto test = [&](const string& method_name, int (*method)(const vector<int>&, const vector<int>&, const vector<int>&, int)) {
-        // 计时
-        auto start = chrono::high_resolution_clock::now();
-        int max_value = method(prices, values, indices, M);
-        auto end = chrono::high_resolution_clock::now();
-        chrono::duration<float, milli> duration = end - start;
-        cout << method_name << ": " << max_value << " (Time: " << duration.count() << " ms)" << endl;
+    cout << "TestCase: (M, Prices, Values, Indices, Wanted)" << endl;
+    using TestCase = tuple<vector<int>, vector<int>, vector<int>, int, int>;
+    vector<TestCase> test_cases{
+        {{100, 23, 59, 69, 30, 40}, {4, 3, 5, 2, 6, 7}, {-1, 0, 0, -1, 3, -1}, 200, 16},
+        // 可添加更多测试用例
+    };
+    vector<pair<string, decltype(&steamGames_dp)>> methods{
+        {"steamGames_dp",         steamGames_dp        },
+        {"steamGames_grouped_dp", steamGames_grouped_dp},
     };
 
-    test("steamGames_dp", steamGames_dp);
-    test("steamGames_grouped_dp", steamGames_grouped_dp);
+    runTests(methods, test_cases);
 
     return 0;
 }

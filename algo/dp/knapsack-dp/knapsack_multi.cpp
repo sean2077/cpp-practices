@@ -1,12 +1,9 @@
 /*
 你有 $n$ 个物品，每个物品重量为 $w_i$，价值为 $v_i$，数量为 $k_i$。你有一个承重上限为 $W$ 的背包，现在要求你在不超过重量上限的情况下选取价值和尽可能大的物品放入背包。求最大价值。
 */
-#include <chrono>
 #include <deque>
 #include <iostream>
 #include <vector>
-
-#include "print_utils.hpp"
 
 using namespace std;
 
@@ -191,41 +188,28 @@ int knapsack_multi_monotonic_queue_reverse(const vector<int>& w, const vector<in
     return dp[W];
 }
 
+#include "test_utils.hpp"
+
 int main() {
-    // 测试数据
-    // vector<int> w = {20, 3, 4, 5, 9, 7};
-    // vector<int> v = {30, 4, 5, 6, 7, 8};
-    // vector<int> k = {2000, 3000, 1000, 2000, 2000, 1000};
-    // int W = 100000;
-
-    // N=20 多重背包测试数据
-    vector<int> w = {15, 8, 12, 6, 25, 18, 9, 14, 22, 11, 7, 16, 20, 13, 10, 19, 24, 17, 21, 26};
-    vector<int> v = {24, 15, 20, 12, 35, 28, 18, 25, 40, 22, 14, 30, 38, 26, 19, 33, 45, 31, 42, 50};
-    vector<int> k = {1500, 2800, 1200, 3500, 800,  1100, 3200, 1600, 700,  2200,
-                     4000, 1300, 900,  2500, 3800, 1000, 600,  1800, 1400, 750};
-    int W = 150000;
-
-    cout << "w: " << w << endl;
-    cout << "v: " << v << endl;
-    cout << "k: " << k << endl;
-    cout << "W: " << W << endl;
-    cout << "---\n";
-
-    auto test = [&](const string& name, auto func) {
-        // 计时
-        auto start = chrono::high_resolution_clock::now();
-        int result = func(w, v, k, W);
-        auto end = chrono::high_resolution_clock::now();
-        chrono::duration<double, milli> duration = end - start;
-        cout << name << ": " << result << " (耗时: " << duration.count() << " 毫秒)" << endl;
+    using TestCase = tuple<vector<int>, vector<int>, vector<int>, int, int>;
+    vector<TestCase> test_cases{
+        // {w, v, k, W, wanted}
+        {{15, 8, 12, 6, 25, 18, 9, 14, 22, 11, 7, 16, 20, 13, 10, 19, 24, 17, 21, 26},
+         {24, 15, 20, 12, 35, 28, 18, 25, 40, 22, 14, 30, 38, 26, 19, 33, 45, 31, 42, 50},
+         {1500, 2800, 1200, 3500, 800, 1100, 3200, 1600, 700, 2200, 4000, 1300, 900, 2500, 3800, 1000, 600, 1800, 1400, 750},
+         150000, 300000},
+        // 可添加更多测试用例
+    };
+    vector<pair<string, decltype(&knapsack_multi_naive1)>> methods{
+        {"朴素解法1",              knapsack_multi_naive1                 },
+        {"朴素解法2",              knapsack_multi_naive2                 },
+        {"朴素解法3",              knapsack_multi_naive3                 },
+        {"二进制优化",             knapsack_multi_binary                 },
+        {"单调队列优化",           knapsack_multi_monotonic_queue        },
+        {"单调队列优化(倒序遍历)", knapsack_multi_monotonic_queue_reverse},
     };
 
-    test("朴素解法1", knapsack_multi_naive1);
-    test("朴素解法2", knapsack_multi_naive2);
-    test("朴素解法3", knapsack_multi_naive3);
-    test("二进制优化", knapsack_multi_binary);
-    test("单调队列优化", knapsack_multi_monotonic_queue);
-    test("单调队列优化(倒序遍历)", knapsack_multi_monotonic_queue_reverse);
+    runTests(methods, test_cases);
 
     return 0;
 }

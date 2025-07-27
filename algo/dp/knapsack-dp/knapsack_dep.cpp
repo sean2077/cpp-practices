@@ -9,11 +9,9 @@
 
 输出最大价值。
 */
-#include <chrono>
 #include <iostream>
 #include <vector>
 
-#include "print_utils.hpp"
 using namespace std;
 
 struct Item {
@@ -63,32 +61,6 @@ void dfs(int u, const vector<Item>& items, int V, vector<vector<int>>& dp) {
     }
 }
 
-// 尝试先插入根节点再遍历子节点树
-void dfs2(int u, const vector<Item>& items, int V, vector<vector<int>>& dp) {
-    // 将当前节点加入背包(因为不插 u 的话后续的子节点也不能选, 结果为 0, 所以能插必须插)
-    for (int j = V; j >= items[u].volume; --j) {
-        dp[u][j] = items[u].value;
-    }
-    // 至此,dp[u][V_u~V] 都是带 u 物品的状态, 其他状态都为 0
-
-    // 遍历u的所有子节点, 从每个子节点树的所有组合中选择一个最优的方案(分组背包)
-    for (int s : items[u].sons) {
-        // 递归处理子节点, 确保子节点的 dp[s] 已经准备好
-        dfs(s, items, V, dp);
-
-        // 分组背包合并
-        for (int j = V; j >= items[u].volume; --j) {
-            // 针对每一个 dp[u][j], 我们需从子节点树的 dp[s] 分组背包中选择一个
-            // 不过必须保证 j - k >= items[u].volume, 这样dp[u][V_u~V]才会带 u
-            // 进而才能取子节点
-            // 而 k 从 V_s 开始是因为当 k < V_s 时, 其连自己都拿不了, 其值为0, 选不选都一样
-            for (int k = items[s].volume; j - k >= items[u].volume; ++k) { // 这里正序逆向都可
-                dp[u][j] = max(dp[u][j], dp[u][j - k] + dp[s][k]);
-            }
-        }
-    }
-}
-
 /* 背包问题（带依赖）: TC:O(N * V^2) SC: O(N * V) */
 int knapsack_dep(int V, const vector<int>& volumes, const vector<int>& values, const vector<int>& parents) {
     int N = volumes.size();
@@ -114,6 +86,34 @@ int knapsack_dep(int V, const vector<int>& volumes, const vector<int>& values, c
     dfs(root, items, V, dp);
     // 返回最大价值
     return dp[root][V];
+}
+
+// 尝试先插入根节点再遍历子节点树
+void dfs2(int u, const vector<Item>& items, int V, vector<vector<int>>& dp) {
+    // 将当前节点加入背包(因为不插 u 的话后续的子节点也不能选, 结果为 0, 所以能插必须插)
+    // for (int j = V; j >= items[u].volume; --j) {
+    //     dp[u][j] = items[u].value;
+    // }
+    dp[u][items[u].volume] = items[u].value;
+    // 为什么这里只给 dp[u][items[u].volume] 赋值即可?
+
+    // 遍历u的所有子节点, 从每个子节点树的所有组合中选择一个最优的方案(分组背包)
+    for (int s : items[u].sons) {
+        // 递归处理子节点, 确保子节点的 dp[s] 已经准备好
+        dfs(s, items, V, dp);
+
+        // 分组背包合并
+        for (int j = V; j > items[u].volume; --j) {
+            // 针对每一个 dp[u][j], 我们需从子节点树的 dp[s] 分组背包中选择一个
+            // 不过必须保证 j - k >= items[u].volume, 这样dp[u][V_u~V]才会带 u
+            // 进而才能取子节点
+            // 而 k 从 V_s 开始是因为当 k < V_s 时, 其连自己都拿不了, 其值为0, 选不选都一样
+            for (int k = items[s].volume; j - k >= items[u].volume; ++k) { // 这里正序逆向都可
+                dp[u][j] = max(dp[u][j], dp[u][j - k] + dp[s][k]);
+            }
+        }
+        // 本质上这里就是现背包泛化物品和子节点泛化物品的求和
+    }
 }
 
 // 递归树第二种写法
@@ -143,41 +143,75 @@ int knapsack_dep2(int V, const vector<int>& volumes, const vector<int>& values, 
     return dp[root][V];
 }
 
+// TODO 泛化物品优化
+void dfs3(int u, const vector<Item>& items, int V, vector<vector<int>>& dp) {
+    // 这里修改 V 的含义, 表示当前背包的剩余容量
+
+    if (V <= 0) {
+        return;
+    }
+
+    // 遍历子节点
+    for (int s : items[u].sons) {
+        // 强制选择子节点 s
+        for (int j = 0; j <= V - items[s].volume; ++j) {
+            dp[s][j] = dp[u][j];
+        }
+        dfs(s, items, V - items[s].volume, dp); // 选了 s，背包容量减小
+
+        for (int j = V; j >= items[s].volume; --j) {
+            dp[u][j] = max(dp[u][j], dp[s][j - items[s].volume] + items[s].value);
+        }
+    }
+}
+
+int knapsack_dep3(int V, const vector<int>& volumes, const vector<int>& values, const vector<int>& parents) {
+    int N = volumes.size();
+    // 构建树
+    int root;
+    vector<Item> items;
+    items.reserve(N);
+    for (int i = 0; i < N; ++i) {
+        items.emplace_back(volumes[i], values[i], parents[i]);
+        if (parents[i] == -1) {
+            root = i; // 记录根节点
+        }
+    }
+    // 连接子节点
+    for (int i = 0; i < N; ++i) {
+        if (items[i].parent != -1) {
+            items[items[i].parent].sons.push_back(i);
+        }
+    }
+    // DP数组 dp_{i,j} 表示以 i 为根节点的树中,背包体积j时取的最大价值
+    vector<vector<int>> dp(N, vector<int>(V + 1, 0));
+    // 深度优先遍历树
+    dfs3(root, items, V, dp);
+    // 返回最大价值
+    return dp[root][V];
+}
+
+#include "test_utils.hpp"
+
 int main() {
     cout << "Knapsack with Dependencies" << endl;
+    cout << "TestCase: (V, Volumes, Values, Parents, Wanted)" << endl;
 
     // 测试用例：
-    int V = 7;
-    vector<int> volumes = {2, 2, 3, 4, 3};
-    vector<int> values = {3, 2, 5, 7, 6};
-    vector<int> parents = {-1, 0, 0, 1, 1};
-    // int V = 5;
-    // vector<int> volumes = {1, 2, 2, 2, 2};
-    // vector<int> values = {1, 10, 10, 100, 100};
-    // vector<int> parents = {-1, 0, 0, 1, 2};
-    // int V = 7;
-    // vector<int> volumes = {1, 2, 2, 2};
-    // vector<int> values = {1, 10, 20, 30};
-    // vector<int> parents = {-1, 0, 0, 0}; // 0为根，1/2/3都是0的子节点
-
-    // result: 11
-
-    cout << "V: " << V << endl;
-    cout << "Volumes: " << volumes << endl;
-    cout << "Values: " << values << endl;
-    cout << "Parents: " << parents << endl;
-    cout << "------" << endl;
-
-    auto test = [&](const string& method_name, int (*method)(int, const vector<int>&, const vector<int>&, const vector<int>&)) {
-        auto start = chrono::high_resolution_clock::now();
-        int max_value = method(V, volumes, values, parents);
-        auto end = chrono::high_resolution_clock::now();
-        chrono::duration<float, milli> duration = end - start;
-        cout << method_name << ": " << max_value << " (Time: " << duration.count() << " ms)" << endl;
+    using TestCase = tuple<int, vector<int>, vector<int>, vector<int>, int>;
+    vector<TestCase> test_cases{
+        {7, {2, 2, 3, 4, 3}, {3, 2, 5, 7, 6},       {-1, 0, 0, 1, 1}, 11 },
+        {5, {1, 2, 2, 2, 2}, {1, 10, 10, 100, 100}, {-1, 0, 0, 1, 2}, 111},
+        {7, {1, 2, 2, 2},    {1, 10, 20, 30},       {-1, 0, 0, 0},    61 },
     };
 
-    test("knapsack_dep", knapsack_dep);
-    test("knapsack_dep2", knapsack_dep2);
+    vector<pair<string, decltype(&knapsack_dep)>> methods{
+        {"knapsack_dep",  knapsack_dep },
+        {"knapsack_dep2", knapsack_dep2},
+        {"knapsack_dep3", knapsack_dep3},
+    };
+
+    runTests(methods, test_cases);
 
     return 0;
 }

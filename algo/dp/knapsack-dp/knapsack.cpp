@@ -16,7 +16,7 @@ using namespace std;
 
 /* 0-1 背包：暴力搜索 TC: O(2^n), SC: O(n) */
 
-int _knapsack01_dfs_helper(vector<int>& wgt, vector<int>& val, int i, int c) {
+int _knapsack01_dfs_helper(const vector<int>& wgt, const vector<int>& val, int i, int c) {
     // 无物品可放或背包无容量
     if (i == 0 || c == 0) {
         return 0;
@@ -34,13 +34,13 @@ int _knapsack01_dfs_helper(vector<int>& wgt, vector<int>& val, int i, int c) {
     return max(v1, v2);
 }
 
-int knapsack01_dfs(vector<int>& wgt, vector<int>& val, int c) {
+int knapsack01_dfs(const vector<int>& wgt, const vector<int>& val, int c) {
     return _knapsack01_dfs_helper(wgt, val, wgt.size(), c);
 }
 
 /** 01背包：记忆化搜索，TC: O(n*c), SC: O(n*c) */
 
-int _knapsack01_dfs_mem_helper(vector<int>& wgt, vector<int>& val, vector<vector<int>>& mem, int i, int c) {
+int _knapsack01_dfs_mem_helper(const vector<int>& wgt, const vector<int>& val, vector<vector<int>>& mem, int i, int c) {
     // 无物品或背包无容量
     if (i == 0 || c == 0) {
         mem[i][c] = 0;
@@ -66,14 +66,14 @@ int _knapsack01_dfs_mem_helper(vector<int>& wgt, vector<int>& val, vector<vector
     return mem[i][c];
 }
 
-int knapsack01_dfs_mem(vector<int>& wgt, vector<int>& val, int c) {
+int knapsack01_dfs_mem(const vector<int>& wgt, const vector<int>& val, int c) {
     int n = wgt.size();
     vector<vector<int>> mem(n + 1, vector<int>(c + 1, -1));
     return _knapsack01_dfs_mem_helper(wgt, val, mem, n, c);
 }
 
 /** 01背包：动态规划 TC: O() SC: O() */
-int knapsack01_dp_v0(vector<int>& wgt, vector<int>& val, int c) {
+int knapsack01_dp_v0(const vector<int>& wgt, const vector<int>& val, int c) {
     int n = wgt.size();
     vector<vector<int>> dp(n + 1, vector<int>(c + 1, 0));
     for (int i = 1; i <= n; ++i) {
@@ -89,7 +89,7 @@ int knapsack01_dp_v0(vector<int>& wgt, vector<int>& val, int c) {
 }
 
 /** 01背包：动态规划(空间进优化版,最优解法) TC: O(nc) SC: O(c) */
-int knapsack01_dp(vector<int>& wgt, vector<int>& val, int c) {
+int knapsack01_dp(const vector<int>& wgt, const vector<int>& val, int c) {
     int n = wgt.size();
     vector<int> dp(c + 1, 0);
     for (int i = 1; i <= n; i++) {
@@ -101,7 +101,7 @@ int knapsack01_dp(vector<int>& wgt, vector<int>& val, int c) {
 }
 
 /** 完全背包 TC: O(nc) SC: O(c) */
-int knapsack_dp(vector<int>& wgt, vector<int>& val, int c) {
+int knapsack_dp(const vector<int>& wgt, const vector<int>& val, int c) {
     int n = wgt.size();
     vector<int> dp(c + 1, 0);
     for (int i = 1; i <= n; i++) {
@@ -112,15 +112,26 @@ int knapsack_dp(vector<int>& wgt, vector<int>& val, int c) {
     return dp[c];
 }
 
+#include "test_utils.hpp"
+
 int main() {
-    // 背包问题
-    vector<int> wgt{10, 20, 30, 40, 50};
-    vector<int> val{50, 120, 150, 210, 240};
-    cout << "knapsack01_dfs: " << knapsack01_dfs(wgt, val, 50) << endl;
-    cout << "knapsack01_dfs_mem: " << knapsack01_dfs_mem(wgt, val, 50) << endl;
-    cout << "knapsack01_dp_v0: " << knapsack01_dp_v0(wgt, val, 50) << endl;
-    cout << "knapsack01_dp (sota): " << knapsack01_dp(wgt, val, 50) << endl;
-    cout << "knapsack_dp: " << knapsack_dp(wgt, val, 50) << endl;
+    cout << "Knapsack Problem" << endl;
+    cout << "TestCase: (Weights, Values, Capacity, Wanted)" << endl;
+    using TestCase = tuple<vector<int>, vector<int>, int, int>;
+    vector<TestCase> test_cases{
+        // {wgt, val, c, wanted}
+        {{10, 20, 30, 40, 50}, {50, 120, 150, 210, 240}, 50, 270},
+        // 可添加更多测试用例
+    };
+    vector<pair<string, decltype(&knapsack01_dfs)>> methods{
+        {"knapsack01_dfs",       knapsack01_dfs    },
+        {"knapsack01_dfs_mem",   knapsack01_dfs_mem},
+        {"knapsack01_dp_v0",     knapsack01_dp_v0  },
+        {"knapsack01_dp (sota)", knapsack01_dp     },
+        {"knapsack_dp",          knapsack_dp       },
+    };
+
+    runTests(methods, test_cases);
 
     return 0;
 }

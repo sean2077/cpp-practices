@@ -54,7 +54,7 @@ int _solve_v1(vector<int>& m, vector<float>& p, float P, int i, float pp) {
     int no = _solve_v1(m, p, P, i - 1, pp);
 
     // 尝试抢当前银行
-    double new_prob = 1.0 - (1.0 - pp) * (1.0 - p[i]);
+    float new_prob = 1.0f - (1.0f - pp) * (1.0f - p[i]);
     int yes = -1; // 表示无效方案
 
     if (new_prob < P) { // 只有概率允许时才抢

@@ -11,7 +11,6 @@
 // > [!question]
 // > 0-1 背包问题，一共 `n <= 20` 个物品，每个物品价格 `prices[i]` （浮点数），重量 `weights[i]` （浮点数），背包容量 `M` （浮点数）。求最大能装的价值是多少？
 #include <algorithm>
-#include <chrono>
 #include <iostream>
 #include <numeric>
 #include <vector>
@@ -153,58 +152,31 @@ float knapsack01_float_half_enum(const vector<float>& prices, const vector<float
     return max_value;
 }
 
+#include "test_utils.hpp"
+
 int main() {
+    cout << "0-1 Knapsack Problem (Float)" << endl;
+    cout << "TestCase: (Prices, Weights, M, Wanted)" << endl;
+
     // 测试数据
-    vector<float> prices{51.56f, 23.56f, 45.62f, 42.23f, 65.32f, 32.45f, 45.78f, 98.32f, 45.62f, 95.32f,
-                         99.45f, 22.48f, 51.56f, 23.56f, 45.62f, 42.23f, 65.32f, 32.45f, 45.78f, 98.32f};
-    vector<float> weights{
-        23.56f, 31.45f, 62.54f, 15.32f, 12.32f, 65.12f, 15.65f, 62.15f, 32.15f, 15.44f,
-        45.65f, 32.15f, 23.56f, 31.45f, 62.54f, 15.32f, 12.32f, 65.12f, 15.65f, 62.15f,
+    using TestCase = tuple<vector<float>, vector<float>, float, float>;
+    vector<TestCase> test_cases{
+        {{51.56f, 23.56f, 45.62f, 42.23f, 65.32f, 32.45f, 45.78f, 98.32f, 45.62f, 95.32f,
+          99.45f, 22.48f, 51.56f, 23.56f, 45.62f, 42.23f, 65.32f, 32.45f, 45.78f, 98.32f},
+         {23.56f, 31.45f, 62.54f, 15.32f, 12.32f, 65.12f, 15.65f, 62.15f, 32.15f, 15.44f,
+          45.65f, 32.15f, 23.56f, 31.45f, 62.54f, 15.32f, 12.32f, 65.12f, 15.65f, 62.15f},
+         678.91f, 1050.07f},
     };
-    float M = 678.91f; // 背包容量
-
-    auto test = [&](const string& method_name, float (*method)(const vector<float>&, const vector<float>&, float)) {
-        // 计时
-        auto start = chrono::high_resolution_clock::now();
-        float max_value = method(prices, weights, M);
-        auto end = chrono::high_resolution_clock::now();
-        chrono::duration<float, milli> duration = end - start;
-        cout << method_name << ": " << max_value << " (Time: " << duration.count() << " ms)" << endl;
-        return max_value;
+    vector<pair<string, decltype(&knapsack01_float_to_int)>> methods{
+        {"knapsack01_float_to_int",      knapsack01_float_to_int     },
+        {"knapsack01_float_binary_enum", knapsack01_float_binary_enum},
+        {"knapsack01_float_recursive",   knapsack01_float_recursive  },
+        {"knapsack01_float_half_enum",   knapsack01_float_half_enum  },
     };
 
-    cout << fixed;     // 设置输出格式为固定小数点
-    cout.precision(2); // 设置小数点后两位
+    cout << fixed << setprecision(4); // 设置输出格式为小数点后两位
 
-    test("knapsack01_float_to_int", knapsack01_float_to_int);
-    test("knapsack01_float_binary_enum", knapsack01_float_binary_enum);
-    test("knapsack01_float_recursive", knapsack01_float_recursive);
-    test("knapsack01_float_half_enum", knapsack01_float_half_enum);
+    runTests(methods, test_cases);
 
     return 0;
 }
-
-// 输入：
-// 20 678.91
-// 23.56 51.56
-// 31.45 23.56
-// 62.54 45.62
-// 15.32 42.23
-// 12.32 65.32
-// 65.12 32.45
-// 15.65 45.78
-// 62.15 98.32
-// 32.15 45.62
-// 15.44 95.32
-// 45.65 99.45
-// 32.15 22.48
-// 23.56 51.56
-// 31.45 23.56
-// 62.54 45.62
-// 15.32 42.23
-// 12.32 65.32
-// 65.12 32.45
-// 15.65 45.78
-// 62.15 98.32
-// 输出：
-// 1050.07

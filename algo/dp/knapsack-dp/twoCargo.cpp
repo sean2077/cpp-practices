@@ -16,11 +16,9 @@
 解释：轮船 A 运输货物 1 或者 4，利润 3；轮船 B 运输货物 2 和 3，利润 8；所以最大的利润是 11。
 */
 #include <algorithm>
-#include <chrono>
+#include <functional>
 #include <iostream>
 #include <vector>
-
-#include "print_utils.hpp"
 
 using namespace std;
 
@@ -44,30 +42,23 @@ int twoCargo_dp(int A, int B, const vector<int>& capacities, const vector<int>& 
     return dp[A][B];
 }
 
+#include "test_utils.hpp"
+
 int main() {
     cout << "Two Cargo Problem" << endl;
+    cout << "TestCase: (A, B, Capacities, ProfitsA, ProfitsB, Expected)" << endl;
 
-    // 测试用例：
-    int A = 5, B = 6, M = 4;
-    vector<int> capacities = {4, 3, 2, 2};
-    vector<int> profitsA = {3, 1, 2, 3};
-    vector<int> profitsB = {2, 4, 4, 3};
-
-    cout << "A: " << A << ", B: " << B << ", M: " << M << endl;
-    cout << "Capacities: " << capacities << endl;
-    cout << "Profits A: " << profitsA << endl;
-    cout << "Profits B: " << profitsB << endl;
-
-    auto test = [&](const string& method_name,
-                    int (*method)(int, int, const vector<int>&, const vector<int>&, const vector<int>&)) {
-        auto start = chrono::high_resolution_clock::now();
-        int result = method(A, B, capacities, profitsA, profitsB);
-        auto end = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::microseconds>(end - start).count();
-        cout << method_name << " Result: " << result << ", Time: " << duration << " microseconds" << endl;
+    using Case = tuple<int, int, vector<int>, vector<int>, vector<int>, int>;
+    vector<Case> cases = {
+        make_tuple(5, 6, vector<int>{4, 3, 2, 2}, vector<int>{3, 1, 2, 3}, vector<int>{2, 4, 4, 3}, 11),
+        // 可在此添加更多测试用例
     };
 
-    test("twoCargo_dp", twoCargo_dp);
+    vector<pair<string, decltype(&twoCargo_dp)>> methods = {
+        {"twoCargo_dp", twoCargo_dp},
+        // 可在此添加更多解法
+    };
 
+    runTests(methods, cases);
     return 0;
 }
