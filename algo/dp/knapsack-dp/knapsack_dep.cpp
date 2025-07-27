@@ -1,13 +1,5 @@
 /*
-有 N 个物品和一个容量是 V 的背包。
-
-物品之间具有依赖关系，且依赖关系组成一棵树的形状。如果选择一个物品，则必须选择它的父节点。
-
-每件物品的编号是 i，体积是 vi，价值是 wi，父节点序号是 pi。根节点为 -1。
-
-求解将哪些物品装入背包，可使物品总体积不超过背包容量，且总价值最大。
-
-输出最大价值。
+有依赖的背包问题 https://www.acwing.com/problem/content/description/10/
 */
 #include <iostream>
 #include <vector>
@@ -91,16 +83,14 @@ int knapsack_dep(int V, const vector<int>& volumes, const vector<int>& values, c
 // 尝试先插入根节点再遍历子节点树
 void dfs2(int u, const vector<Item>& items, int V, vector<vector<int>>& dp) {
     // 将当前节点加入背包(因为不插 u 的话后续的子节点也不能选, 结果为 0, 所以能插必须插)
-    // for (int j = V; j >= items[u].volume; --j) {
-    //     dp[u][j] = items[u].value;
-    // }
-    dp[u][items[u].volume] = items[u].value;
-    // 为什么这里只给 dp[u][items[u].volume] 赋值即可?
+    for (int j = V; j >= items[u].volume; --j) {
+        dp[u][j] = items[u].value;
+    }
 
     // 遍历u的所有子节点, 从每个子节点树的所有组合中选择一个最优的方案(分组背包)
     for (int s : items[u].sons) {
         // 递归处理子节点, 确保子节点的 dp[s] 已经准备好
-        dfs(s, items, V, dp);
+        dfs2(s, items, V, dp);
 
         // 分组背包合并
         for (int j = V; j > items[u].volume; --j) {
@@ -157,7 +147,7 @@ void dfs3(int u, const vector<Item>& items, int V, vector<vector<int>>& dp) {
         for (int j = 0; j <= V - items[s].volume; ++j) {
             dp[s][j] = dp[u][j];
         }
-        dfs(s, items, V - items[s].volume, dp); // 选了 s，背包容量减小
+        dfs3(s, items, V - items[s].volume, dp); // 选了 s，背包容量减小
 
         for (int j = V; j >= items[s].volume; --j) {
             dp[u][j] = max(dp[u][j], dp[s][j - items[s].volume] + items[s].value);
@@ -200,9 +190,16 @@ int main() {
     // 测试用例：
     using TestCase = tuple<int, vector<int>, vector<int>, vector<int>, int>;
     vector<TestCase> test_cases{
-        {7, {2, 2, 3, 4, 3}, {3, 2, 5, 7, 6},       {-1, 0, 0, 1, 1}, 11 },
-        {5, {1, 2, 2, 2, 2}, {1, 10, 10, 100, 100}, {-1, 0, 0, 1, 2}, 111},
-        {7, {1, 2, 2, 2},    {1, 10, 20, 30},       {-1, 0, 0, 0},    61 },
+        {7,  {2, 2, 3, 4, 3},                                                      {3, 2, 5, 7, 6},       {-1, 0, 0, 1, 1}, 11 },
+        {5,  {1, 2, 2, 2, 2},                                                      {1, 10, 10, 100, 100}, {-1, 0, 0, 1, 2}, 111},
+        {7,  {1, 2, 2, 2},                                                         {1, 10, 20, 30},       {-1, 0, 0, 0},    61 },
+        {10, {1, 2, 3, 4},                                                         {10, 20, 30, 40},      {-1, 0, 1, 2},    100},
+        {50,
+         {18, 4, 1, 22, 16, 22, 7, 25, 2, 7, 3, 21, 20, 11, 20, 14, 9, 15, 5, 10},
+         {23, 31, 27, 21, 1, 31, 39, 16, 40, 44, 10, 45, 29, 17, 46, 48, 48, 21, 30, 32},
+         {9, 9, 3, 6, 9, 13, -1, 2, 7, 2, 2, 7, 18, 3, 17, 12, 7, 2, 2, 17},
+         202                                                                                                                   },
+        // 可添加更多测试用例
     };
 
     vector<pair<string, decltype(&knapsack_dep)>> methods{
