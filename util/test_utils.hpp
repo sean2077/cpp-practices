@@ -28,8 +28,11 @@ void runTest(const std::string& method_name, Method method, const Case& tcase) {
     if constexpr (std::tuple_size<Case>::value > 0) {
         constexpr size_t last = std::tuple_size<Case>::value - 1;
         auto wanted = std::get<last>(tcase);
+        // 使用 ANSI 转义序列为对错符号加颜色
+        const char* correct = "\033[32m✔\033[0m"; // 绿色
+        const char* wrong = "\033[31m✖\033[0m";   // 红色
         std::cout << method_name << ": " << result << " (Time: " << duration.count() << " ms) "
-                  << (result == wanted ? "✔" : "✖") << std::endl;
+                  << (result == wanted ? correct : wrong) << std::endl;
     } else {
         std::cout << method_name << ": " << result << " (Time: " << duration.count() << " ms)" << std::endl;
     }
