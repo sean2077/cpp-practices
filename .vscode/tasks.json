@@ -1,0 +1,76 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "CMake: 生成",
+			"command": "build",
+			"targets": [
+				"all"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"detail": "CMake 模板 生成 任务",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"focus": false,
+				"clear": true
+			},
+			"options": {
+				"statusbar": {
+					"hide": true
+				}
+			}
+		},
+		{
+			"type": "cmake",
+			"label": "🔨构建当前目标",
+			"command": "build",
+			"targets": [
+				"${fileBasenameNoExtension}"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "CMake 模板 构建当前目标 任务",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"focus": false,
+				"clear": true
+			},
+			"options": {
+				"statusbar": {
+					"hide": true
+				}
+			}
+		},
+		{
+			"type": "shell",
+			"label": "🚀构建并运行当前目标",
+			"dependsOn": "🔨构建当前目标",
+			"command": "${command:cmake.buildDirectory}/${fileBasenameNoExtension}",
+			"args": [],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"detail": "CMake 模板 构建并运行当前目标 任务",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"focus": false,
+				"clear": true
+			},
+			"options": {
+				"statusbar": {
+					"filePattern": "cpp$"
+				}
+			}
+		}
+	]
+}
