@@ -1,8 +1,8 @@
 build/
 .cache
+tmp*
 
 .vscode/*
 !.vscode/launch.json
 !.vscode/tasks.json
-
-tmp*
+!.vscode/cpp.code-snippets
