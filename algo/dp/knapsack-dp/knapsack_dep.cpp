@@ -133,31 +133,37 @@ int knapsack_dep2(int V, const vector<int>& volumes, const vector<int>& values, 
     return dp[root][V];
 }
 
-// TODO 泛化物品优化
-void dfs3(int u, const vector<Item>& items, int V, vector<vector<int>>& dp) {
-    // 这里修改 V 的含义, 表示当前背包的剩余容量
+// 泛化物品求并
 
-    if (V <= 0) {
+void dfs3(int u, const vector<Item>& items, int V, int v, vector<vector<int>>& dp) {
+    if (v > V) {
         return;
     }
 
-    // 遍历子节点
-    for (int s : items[u].sons) {
-        // 强制选择子节点 s
-        for (int j = 0; j <= V - items[s].volume; ++j) {
-            dp[s][j] = dp[u][j];
-        }
-        dfs3(s, items, V - items[s].volume, dp); // 选了 s，背包容量减小
+    // DP数组 dp_{i,j} 表示遍历到节点 i 时, 从已遍历的节点取体积不超过 j 且必选 i 时取的最大价值
 
-        for (int j = V; j >= items[s].volume; --j) {
-            dp[u][j] = max(dp[u][j], dp[s][j - items[s].volume] + items[s].value);
+    for (int s : items[u].sons) {
+        // 遍历节点 s,
+        for (int j = v + items[s].volume; j <= V; ++j) {
+            dp[s][j] = dp[u][j - items[s].volume] + items[s].value;
+        }
+
+        // 递归处理s树, 遍历完全部 s 树的全部节点
+        dfs3(s, items, V, v + items[s].volume, dp);
+        // 至此, 除了u之前遍历完的点(含u, 记为Nu), 还包括s树的全部点(记为N's), s 树的全部点对应的 dp 都已经准备好了
+        // 而 dp[u] 还是之前遍历完的点的状态, 需要更新
+        for (int j = v + items[s].volume; j <= V; ++j) {
+            // dp[u][j] 表示从Nu+N's中取u不取s且体积不超过j的解, 因为不取s就不能取s的子树节点 所以能这么表示
+            // dp[s][j] 表示从Nu+N's中取u且取s的子树节点, 体积不超过j的解
+            // dp[u][j] 和 dp[s][j] 不可能同时发生，故这里求并，得到的 dp[u][j] 是从Nu+N's中取u且体积不超过j的解
+            // 也即 dp 的含义， 即 dp[u]得到更新
+            dp[u][j] = max(dp[u][j], dp[s][j]);
         }
     }
 }
 
 int knapsack_dep3(int V, const vector<int>& volumes, const vector<int>& values, const vector<int>& parents) {
     int N = volumes.size();
-    // 构建树
     int root;
     vector<Item> items;
     items.reserve(N);
@@ -167,16 +173,19 @@ int knapsack_dep3(int V, const vector<int>& volumes, const vector<int>& values, 
             root = i; // 记录根节点
         }
     }
-    // 连接子节点
     for (int i = 0; i < N; ++i) {
         if (items[i].parent != -1) {
             items[items[i].parent].sons.push_back(i);
         }
     }
-    // DP数组 dp_{i,j} 表示以 i 为根节点的树中,背包体积j时取的最大价值
+
+    // DP数组 dp_{i,j} 表示遍历到节点 i 时, 从已遍历的节点取体积不超过 j 且必选 i 时取的最大价值
     vector<vector<int>> dp(N, vector<int>(V + 1, 0));
+    for (int j = items[root].volume; j <= V; ++j) {
+        dp[root][j] = items[root].value; // 初始化根节点的状态
+    }
     // 深度优先遍历树
-    dfs3(root, items, V, dp);
+    dfs3(root, items, V, items[root].volume, dp);
     // 返回最大价值
     return dp[root][V];
 }
